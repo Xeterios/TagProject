@@ -1,0 +1,11 @@
+name: Tag
+version: ${project.version}
+main: mu.xeterios.tag.Main
+api-version: 1.19
+authors: [ Xeterios ]
+depend: [Multiverse-Core]
+description: Brings the game of Tag to your server
+commands:
+  tag:
+    description: Control the tag plugin
+    usage: /<command>
