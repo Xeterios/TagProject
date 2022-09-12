@@ -1,6 +1,6 @@
 #################################
 #                               #
-#           Tag v5.2            #
+#          Tag v6.2.1           #
 #          by Xeterios          #
 #                               #
 #################################
@@ -11,7 +11,7 @@ settings:
     enabled: true
     # If the sum of chances exceed 100, some powerups may not spawn.
     boost:
-      chance: 40.0
+      chance: 38.0
     sniper:
       chance: 15.0
     infrasight:
@@ -20,6 +20,8 @@ settings:
       chance: 25.0
     invisibility:
       chance: 10.0
+    shuffle:
+      chance: 2.0
 locale:
   prefix: "&x&f&0&b&d&5&9&lTag &8» &x&f&0&b&d&5&9"
   color: "&x&f&0&b&d&5&9"

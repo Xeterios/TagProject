@@ -1,26 +1,22 @@
 package mu.xeterios.tag.tag.powerup.powerups;
 
 import mu.xeterios.tag.tag.PowerupHandler;
+import mu.xeterios.tag.tag.players.PlayerManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-
-import java.util.Objects;
 
 
-public class Boost implements Powerup {
+public class Shuffle implements Powerup {
 
     @Override
     public ItemStack GetItem() {
-        ItemStack item = new ItemStack(Material.SUGAR, 1);
+        ItemStack item = new ItemStack(Material.BOOK, 1);
         ItemMeta itemMeta = item.getItemMeta();
         itemMeta.addEnchant(Enchantment.DURABILITY, 1, true);
         itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
@@ -30,23 +26,17 @@ public class Boost implements Powerup {
 
     @Override
     public Color GetPowerupColor() {
-        return Color.AQUA;
+        return Color.PURPLE;
     }
 
     @Override
     public String GetHologramName() {
-        return ChatColor.AQUA + "" + ChatColor.BOLD + "BOOST (2s)";
+        return ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "SHUFFLE";
     }
 
     @Override
     public void Trigger(Player p, PowerupHandler handler) {
-        int duration = 60;
-        if (p.getPotionEffect(PotionEffectType.SPEED) != null){
-            duration += Objects.requireNonNull(p.getPotionEffect(PotionEffectType.SPEED)).getDuration();
-        }
-        PotionEffect effect = new PotionEffect(PotionEffectType.SPEED, duration, 2);
-        p.addPotionEffect(effect);
-        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 10, 2);
-        p.sendTitle(ChatColor.AQUA + "BOOST", ChatColor.GRAY + "activated!", 0, 20, 10);
+        PlayerManager playerManager = handler.getPlayerManager();
+        playerManager.Shuffle();
     }
 }

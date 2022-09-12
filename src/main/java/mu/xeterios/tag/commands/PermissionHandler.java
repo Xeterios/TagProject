@@ -9,7 +9,7 @@ import java.util.Hashtable;
 public class PermissionHandler {
 
     private final CommandSender sender;
-    public Dictionary<String, String> nodes;
+    private Dictionary<String, String> nodes;
 
     public PermissionHandler(CommandSender player){
         this.sender = player;

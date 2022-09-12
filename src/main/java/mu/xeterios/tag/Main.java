@@ -39,7 +39,7 @@ public final class Main extends JavaPlugin {
         createCustomConfig();
         getConfig().options().copyDefaults();
         saveDefaultConfig();
-        this.config = new Config(this, this);
+        this.config = new Config(this);
         this.tag = new Tag(this);
         this.getCommand("tag").setExecutor(new CommandHandler(this, config));
         config.saveCustomConfig();

@@ -1,5 +1,6 @@
 package mu.xeterios.tag.tag.powerup;
 
+import lombok.Getter;
 import mu.xeterios.tag.Main;
 import mu.xeterios.tag.config.Config;
 import mu.xeterios.tag.config.Region;
@@ -24,13 +25,14 @@ public class PowerupSpawner {
     private final Region region;
     private final PowerupHandler handler;
     private final PowerupFactory factory;
-    public Timer powerUpTimer;
+
+    @Getter private Timer powerUpTimer;
 
     public PowerupSpawner(PowerupHandler handler, Tag tag){
         this.factory = new PowerupFactory();
         this.handler = handler;
         this.tag = tag;
-        this.region = new Region(tag.map);
+        this.region = new Region(tag.getMap());
     }
 
     public void RunTimer(int delay) {
@@ -52,8 +54,8 @@ public class PowerupSpawner {
             item.setVelocity(new Vector(0, 0, 0));
             item.setGravity(false);
         });
-        handler.powerupLocations.add(location);
-        handler.powerups.put(location, powerup);
+        handler.getPowerupLocations().add(location);
+        handler.getPowerups().put(location, powerup);
         //DEBUG
         /*for (Player p : tag.allPlayers){
             p.sendMessage(tag.config.pluginPrefix + "A " + powerup.getClass().getSimpleName() + " powerup spawned at: " + ChatColor.RESET + location.getX() + " " + location.getY() + " " + location.getZ() + ChatColor.translateAlternateColorCodes('&', tag.config.pluginColor) + "!");
@@ -78,7 +80,7 @@ public class PowerupSpawner {
             location.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, new Location(location.getWorld(), location.getX(), location.getY()-0.6, location.getZ()), 1, 1, 1, 1, 0);
         }, 0, (long) 3.5);
 
-        handler.effects.put(location, task);
+        handler.getEffects().put(location, task);
 
         // Spawn hologram
         Bukkit.getScheduler().scheduleSyncDelayedTask(Main.getPlugin(Main.class), () -> {

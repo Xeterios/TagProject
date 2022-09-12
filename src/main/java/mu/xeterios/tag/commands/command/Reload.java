@@ -13,11 +13,11 @@ public class Reload implements Cmd {
         main.getTag().Stop();
         config.ReloadConfig();
         main.setTag(new Tag(main));
-        sender.sendMessage(config.pluginPrefix + ChatColor.GREEN + "Plugin reloaded successfully!");
+        sender.sendMessage(config.getPluginPrefix() + ChatColor.GREEN + "Plugin reloaded successfully!");
     }
 
     @Override
     public void SendFaultyMessage(CommandSender sender, Main main, Config config) {
-        sender.sendMessage(config.pluginPrefix + ChatColor.RED + "An unknown error occured.");
+        sender.sendMessage(config.getPluginPrefix() + ChatColor.RED + "An unknown error occured.");
     }
 }

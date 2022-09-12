@@ -3,6 +3,7 @@ package mu.xeterios.tag.tag.timer;
 import mu.xeterios.tag.Main;
 import mu.xeterios.tag.config.Map;
 import mu.xeterios.tag.tag.Tag;
+import mu.xeterios.tag.tag.players.PlayerType;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
@@ -11,6 +12,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.TimerTask;
 
 public class StartupTimer extends TimerTask {
@@ -34,12 +36,12 @@ public class StartupTimer extends TimerTask {
             handler.StopTimer();
             Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), tag::SelectTaggers);
             handler.RunTimer(TimerType.GAME, map);
-            for (Player p : tag.allPlayersAndSpectators) {
+            for (Player p : tag.getPlayerManager().GetAllPlayers()) {
                 p.sendTitle(ChatColor.GREEN + "START", "", 10, 20, 10);
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 15, 2);
             }
         } else {
-            String message = tag.config.pluginColor + "Game starts in &e" + i + " " + tag.config.pluginColor + "seconds.";
+            String message = tag.getConfig().getPluginColor() + "Game starts in &e" + i + " " + tag.getConfig().getPluginColor() + "seconds.";
             message = message.replaceAll("[&]", "§");
             StringBuilder sb = new StringBuilder();
             switch (i) {
@@ -65,11 +67,11 @@ public class StartupTimer extends TimerTask {
                     sb.append(i);
                 }
             }
-            for (Player p : tag.allPlayersAndSpectators) {
+            for (Player p : tag.getPlayerManager().GetAllPlayers()) {
                 p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
                 if (i == start){
                     Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), () -> p.teleport(map.getSpawn()));
-                    if (tag.allPlayers.contains(p)){
+                    if (tag.getPlayerManager().GetPlayers(PlayerType.RUNNER).contains(p)){
                         Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), () -> p.setGameMode(GameMode.ADVENTURE));
                     } else {
                         Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), () -> p.setGameMode(GameMode.SPECTATOR));

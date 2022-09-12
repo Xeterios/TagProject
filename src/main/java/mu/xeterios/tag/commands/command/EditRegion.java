@@ -34,7 +34,7 @@ public class EditRegion implements Cmd, Listener {
                     this.config = config;
                     this.first = true;
                     main.getServer().getPluginManager().registerEvents(this, main);
-                    sender.sendMessage(config.pluginPrefix + "Left click on a block to set first position");
+                    sender.sendMessage(config.getPluginPrefix() + "Left click on a block to set first position");
                 } else {
                     SendFaultyMessage(sender, main, config);
                 }
@@ -49,34 +49,38 @@ public class EditRegion implements Cmd, Listener {
     @Override
     public void SendFaultyMessage(CommandSender sender, Main main, Config config) {
         if (args.length == 1) {
-            sender.sendMessage(config.pluginPrefix + ChatColor.RED + "Please enter a valid map name.");
+            sender.sendMessage(config.getPluginPrefix() + ChatColor.RED + "Please enter a valid map name.");
         } else if (config.GetMap(args[1].toLowerCase()) == null){
-            sender.sendMessage(config.pluginPrefix + ChatColor.RED + "This map does not exist.");
+            sender.sendMessage(config.getPluginPrefix() + ChatColor.RED + "This map does not exist.");
         } else {
-            sender.sendMessage(config.pluginPrefix + ChatColor.RED + "You can only use this command as a player.");
+            sender.sendMessage(config.getPluginPrefix() + ChatColor.RED + "You can only use this command as a player.");
         }
     }
 
     @EventHandler
     public void OnRightClick(PlayerInteractEvent e){
-        if (e.getAction() == Action.LEFT_CLICK_BLOCK){
-            if (first)
-                this.pos1 = e.getClickedBlock().getLocation();
-                e.getPlayer().sendMessage(config.pluginPrefix + "First location set: " + pos1.getX() + ", " + pos1.getY() + ", " + pos1.getZ());
-                e.getPlayer().sendMessage(config.pluginPrefix + "Right click on a block to set second position");
-                first = false;
+        if (e.getClickedBlock() != null){
+            if (e.getAction() == Action.LEFT_CLICK_BLOCK){
+                if (first){
+                    this.pos1 = e.getClickedBlock().getLocation();
+                    e.getPlayer().sendMessage(config.getPluginPrefix() + "First location set: " + pos1.getX() + ", " + pos1.getY() + ", " + pos1.getZ());
+                    e.getPlayer().sendMessage(config.getPluginPrefix() + "Right click on a block to set second position");
+                    first = false;
+                }
             }
             e.setCancelled(true);
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK){
-            if (!first){
-                this.pos2 = e.getClickedBlock().getLocation();
-                e.getPlayer().sendMessage(config.pluginPrefix + "Second location set: " + pos2.getX() + ", " + pos2.getY() + ", " + pos2.getZ());
-                if (config.EditRegion(pos1, pos2, config.GetMap(args[1].toLowerCase()))){
-                    e.getPlayer().sendMessage(config.pluginPrefix + "New region set successfully.");
-                    config.SaveConfig();
-                    HandlerList.unregisterAll(this);
+            if (e.getAction() == Action.RIGHT_CLICK_BLOCK){
+                if (!first){
+                    this.pos2 = e.getClickedBlock().getLocation();
+                    e.getPlayer().sendMessage(config.getPluginPrefix() + "Second location set: " + pos2.getX() + ", " + pos2.getY() + ", " + pos2.getZ());
+                    if (config.EditRegion(pos1, pos2, config.GetMap(args[1].toLowerCase()))){
+                        e.getPlayer().sendMessage(config.getPluginPrefix() + "New region set successfully.");
+                        config.SaveConfig();
+                        HandlerList.unregisterAll(this);
+                    }
                 }
             }
         }
+
     }
 }

@@ -1,6 +1,10 @@
 package mu.xeterios.tag.tag;
 
+import lombok.Getter;
 import mu.xeterios.tag.Main;
+import mu.xeterios.tag.tag.players.PlayerManager;
+import mu.xeterios.tag.tag.players.PlayerType;
+import mu.xeterios.tag.tag.players.TagPlayer;
 import mu.xeterios.tag.tag.powerup.PowerupFactory;
 import mu.xeterios.tag.tag.powerup.PowerupSpawner;
 import mu.xeterios.tag.tag.powerup.powerups.Powerup;
@@ -12,29 +16,32 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
 public class PowerupHandler implements Listener {
 
-    public PowerupSpawner spawner;
-    public ArrayList<Location> powerupLocations;
-    public Dictionary<Location, Powerup> powerups;
-    public Map<Location, BukkitTask> effects;
+    @Getter private final PowerupSpawner spawner;
+    @Getter private final ArrayList<Location> powerupLocations;
+    @Getter private final Dictionary<Location, Powerup> powerups;
+    @Getter private final Map<Location, BukkitTask> effects;
+    @Getter private final PlayerManager playerManager;
+
     private final ArrayList<Projectile> arrows;
-    private final Tag tag;
-    private Player shooter;
-    public boolean infraSightActive = false;
 
     public PowerupHandler(Tag tag){
-        this.tag = tag;
+        this.playerManager = tag.getPlayerManager();
         this.arrows = new ArrayList<>();
         this.powerupLocations = new ArrayList<>();
         this.powerups = new Hashtable<>();
         this.effects = new HashMap<>();
-        spawner = new PowerupSpawner(this, tag);
-        spawner.RunTimer(35);
+        this.spawner = new PowerupSpawner(this, tag);
+        this.spawner.RunTimer(35);
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(Main.getPlugin(Main.class), () -> {
             for (Projectile arrow : arrows){
@@ -48,10 +55,11 @@ public class PowerupHandler implements Listener {
 
     @EventHandler
     public void PickupPowerup(EntityPickupItemEvent e){
-        if (e.getEntity() instanceof Player) {
+        LivingEntity livingEntity = e.getEntity();
+        if (livingEntity instanceof Player) {
             PowerupFactory factory = new PowerupFactory();
             Powerup powerup = factory.GetPowerup(e.getItem().getItemStack().getType());
-            powerup.Trigger((Player) e.getEntity(), this);
+            powerup.Trigger((Player) livingEntity, this);
             Location location = e.getItem().getLocation();
             for (Location location2 : powerupLocations){
                 if (location2.getX() == location.getX() && location2.getY() == location.getY() && location2.getZ() == location.getZ()){
@@ -73,30 +81,39 @@ public class PowerupHandler implements Listener {
 
     @EventHandler
     public void ShootSniperBow(EntityShootBowEvent e){
-        if (e.getEntity() instanceof Player){
-            ((Player) e.getEntity()).getInventory().setItemInOffHand(new ItemStack(Material.AIR, 1));
-            ((Player) e.getEntity()).getInventory().remove(Sniper.GetBow());
+        if (e.getEntity() instanceof Player shooter){
+            shooter.getInventory().setItemInOffHand(new ItemStack(Material.AIR, 1));
+            shooter.getInventory().remove(Sniper.GetBow());
             this.arrows.add((Projectile) e.getProjectile());
-            this.shooter = (Player) e.getEntity();
         }
     }
 
     @EventHandler
     public void ArrowHit(ProjectileHitEvent e){
-        if (e.getEntity() instanceof Arrow){
-            if (e.getHitEntity() instanceof Player){
-                if (tag.eventsHandler.IsPlayerATagger(shooter) && !tag.eventsHandler.IsPlayerATagger((Player) e.getHitEntity())){
-                    tag.eventsHandler.SwapTaggerRunner(shooter, (Player) e.getHitEntity());
+        Projectile entity = e.getEntity();
+        if (entity instanceof Arrow){
+            if (e.getHitEntity() instanceof Player hit && entity.getShooter() instanceof Player shooter){
+                if (playerManager.GetTagPlayer(shooter).getType().equals(PlayerType.TAGGER) && !playerManager.GetTagPlayer(hit).getType().equals(PlayerType.TAGGER)){
+                    playerManager.SwapTagger(shooter, (Player) e.getHitEntity());
+
                     shooter.playSound(shooter.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 10, 2);
-                    ((Player) e.getHitEntity()).playSound(e.getHitEntity().getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 10, 2);
-                    for (Player p : tag.allPlayers){
-                        p.sendMessage(tag.config.pluginPrefix + ChatColor.translateAlternateColorCodes('&', this.tag.config.pluginColor) + shooter.getName() + ChatColor.RESET + " has SNIPED "+ ChatColor.translateAlternateColorCodes('&', this.tag.config.pluginColor) + e.getHitEntity().getName() + ChatColor.RESET + " and is now tagged!");
+                    hit.playSound(e.getHitEntity().getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 10, 2);
+
+                    String message = "$pluginPrefix" + ChatColor.GREEN + shooter.getName() + ChatColor.RESET + " has SNIPED " + ChatColor.RED + hit.getName() + ChatColor.RESET + " and is now tagged!";
+                    playerManager.SendMessage(message);
+
+                    double distanceBetween = shooter.getLocation().distance(hit.getLocation());
+                    int requiredDistance = 20;
+                    if (distanceBetween >= requiredDistance){
+                        String extra = "$pluginPrefix&bYou sniped &c" + hit.getName() + "&f from over &3&n" + requiredDistance + " meters&b and gained an extra point!";
+                        playerManager.GetTagPlayer(shooter).AddBonusPoints(1);
+                        playerManager.SendMessage(shooter, extra);
                     }
+
                 }
             }
-            e.getEntity().getLocation();
-            e.getEntity().remove();
-            this.arrows.remove(e.getEntity());
+            this.arrows.remove(entity);
+            entity.remove();
             e.setCancelled(true);
         }
     }
@@ -117,6 +134,66 @@ public class PowerupHandler implements Listener {
                 e.setCancelled(true);
             }
         }
+    }
+
+    @EventHandler
+    public void OnPotionHit(PotionSplashEvent e){
+        ArrayList<PotionEffectType> types = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+
+        PotionMeta meta = e.getPotion().getPotionMeta();
+        for(PotionEffect effects : meta.getCustomEffects()){
+            types.add(effects.getType());
+        }
+
+        if (types.contains(PotionEffectType.BLINDNESS) && types.contains(PotionEffectType.SLOW)){
+            sb.append(ChatColor.DARK_GRAY);
+            sb.append(ChatColor.BOLD);
+            sb.append("CHAINED");
+        }
+
+        ThrownPotion potion = e.getPotion();
+        ProjectileSource source = potion.getShooter();
+        if (source instanceof Player player){
+            // Create message
+            StringBuilder message = new StringBuilder();
+            message.append("$pluginPrefix&fYou have &8&lCHAINED&r ");
+            Collection<LivingEntity> affectedEntities = e.getAffectedEntities();
+            if (affectedEntities.size() < 4){
+                for(LivingEntity entity : e.getAffectedEntities()){
+                    if (entity instanceof Player p){
+                        TagPlayer tagPlayer = playerManager.GetTagPlayer(p);
+                        PlayerType type = tagPlayer.getType();
+                        String playerName = tagPlayer.getPlayer().getName();
+                        if (type.equals(PlayerType.TAGGER)){
+                            message.append("&c");
+                            message.append(playerName);
+                        } else if (type.equals(PlayerType.RUNNER)) {
+                            message.append("&a");
+                            message.append(playerName);
+                        }
+                        ArrayList<LivingEntity> affected = new ArrayList<>(){{addAll(e.getAffectedEntities());}};
+                        int index = affected.indexOf(entity);
+                        if (index != affected.size() - 1){
+                            message.append("&f, ");
+                        }
+                    }
+                }
+            } else {
+                message.append(affectedEntities.size());
+                message.append(" players");
+            }
+            // Give effects and play title
+            for(LivingEntity entity : e.getAffectedEntities()){
+                if (entity instanceof Player p) {
+                    p.sendTitle(sb.toString(), "", 10, 20, 10);
+                    p.playSound(p.getLocation(), Sound.ENTITY_ALLAY_HURT, 15, 0);
+                }
+            }
+            message.append("&f!");
+            playerManager.SendMessage(player, message.toString());
+        }
+
     }
 
     public void DespawnPowerups(){

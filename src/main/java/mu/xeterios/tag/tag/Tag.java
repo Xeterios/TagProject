@@ -1,78 +1,68 @@
 package mu.xeterios.tag.tag;
 
+import lombok.Getter;
+import lombok.Setter;
 import mu.xeterios.tag.Main;
 import mu.xeterios.tag.config.Config;
 import mu.xeterios.tag.config.Map;
+import mu.xeterios.tag.tag.players.PlayerManager;
+import mu.xeterios.tag.tag.players.PlayerType;
+import mu.xeterios.tag.tag.players.TagPlayer;
 import mu.xeterios.tag.tag.timer.TimerHandler;
 import mu.xeterios.tag.tag.timer.TimerType;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.*;
-import org.checkerframework.checker.units.qual.A;
 
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 public class Tag {
 
-    public final Main plugin;
+    private final Main plugin;
 
-    public final ArrayList<Player> allPlayers;
-    public final ArrayList<Player> allPlayersAndSpectators;
-    public final ArrayList<Player> taggers;
-    public final ArrayList<Player> runners;
+    @Getter @Setter private Config config;
+    @Getter @Setter private int round = 0;
 
-    public boolean started;
+    @Getter private boolean started;
+    @Getter private final ArrayList<World> worlds;
+    @Getter private Map map;
+    @Getter private Scoreboard scoreboard;
+    @Setter private Scoreboard oldScoreboard;
+    @Getter private Objective objective;
 
-    public ArrayList<World> worlds;
-    public Map map;
-    public Scoreboard scoreboard;
-    public Scoreboard saveOldScoreboard;
-    public Objective objective;
-    public final TimerHandler handler;
-    public final EventsHandler eventsHandler;
-    public PowerupHandler powerupHandler;
-    public Config config;
-
-    public int round = 0;
+    @Getter private final PlayerManager playerManager;
+    @Getter private final TimerHandler handler;
+    @Getter private PowerupHandler powerupHandler;
+    private final EventsHandler eventsHandler;
 
     public Tag(Main plugin){
         this.plugin = plugin;
-        this.allPlayers = new ArrayList<>();
-        this.allPlayersAndSpectators = new ArrayList<>();
-        this.taggers = new ArrayList<>();
-        this.runners = new ArrayList<>();
+        this.playerManager = new PlayerManager(this);
         this.worlds = new ArrayList<>();
         this.handler = new TimerHandler(this);
         this.eventsHandler = new EventsHandler(this);
     }
 
-    public void SetConfig(Config config){
-        this.config = config;
-    }
-
     public void Start(){
         if (!started){
             plugin.getServer().getPluginManager().registerEvents(eventsHandler, this.plugin);
-            for (Player p : allPlayers){
-                runners.add(p);
-                UnmakeTagger(p);
-                p.getInventory().clear();
-                Objects.requireNonNull(scoreboard.getTeam("Runners")).addEntry(p.getName());
-                p.setScoreboard(scoreboard);
+
+            for (Player player : playerManager.GetAllPlayers()){
+                player.getInventory().clear();
+                player.setScoreboard(scoreboard);
             }
-            for(Player p : allPlayersAndSpectators){
-                p.getInventory().clear();
-                p.setScoreboard(scoreboard);
+
+            for (Player player : playerManager.GetPlayers(PlayerType.RUNNER)){
+                playerManager.MakeRunner(player);
+                playerManager.ChangePlayerType(player, PlayerType.RUNNER);
             }
+
             this.started = true;
-            if (config.powerups){
+            if (config.isPowerups()){
                 this.powerupHandler = new PowerupHandler(this);
                 plugin.getServer().getPluginManager().registerEvents(powerupHandler, this.plugin);
             }
@@ -86,22 +76,22 @@ public class Tag {
             if (!Setup()) {
                 return false;
             }
-            if (arg.equals("@a")){
+            if (arg.equals("@a")) {
                 this.worlds.addAll(Bukkit.getWorlds());
             } else {
                 this.worlds.add(Bukkit.getWorld(arg));
             }
             assert worlds.get(0) != null;
-            if (arg2 != null){
-                Map map = config.maps.get(arg2);
-                if (map != null){
-                    if (map.getSpawn() == null){
+            if (arg2 != null) {
+                Map map = config.getMaps().get(arg2);
+                if (map != null) {
+                    if (map.getSpawn() == null) {
                         return false;
                     }
-                    if (map.getMin() == null){
+                    if (map.getMin() == null) {
                         return false;
                     }
-                    if (map.getMax() == null){
+                    if (map.getMax() == null) {
                         return false;
                     }
                     this.map = map;
@@ -112,21 +102,23 @@ public class Tag {
             ArrayList<Player> toAdd = new ArrayList<>();
             for (World world : worlds){
                 for (Player p : world.getPlayers()) {
-                    if (!toAdd.contains(p)){
+                    if (!toAdd.contains(p)) {
                         toAdd.add(p);
                     }
                 }
             }
-            for(Player p : toAdd){
-                if (!p.hasPermission("tag.exempt")) {
-                    allPlayers.add(p);
+            for(Player player : toAdd){
+                if (player.hasPermission("tag.exempt")) {
+                    playerManager.AddPlayer(player);
+                    playerManager.ChangePlayerType(player, PlayerType.SPECTATOR);
+                } else {
+                    playerManager.AddPlayer(player);
+                    playerManager.ChangePlayerType(player, PlayerType.RUNNER);
                 }
             }
-            allPlayersAndSpectators.addAll(toAdd);
 
-            if (!(allPlayers.size() > 1)){
-                this.allPlayers.clear();
-                this.allPlayersAndSpectators.clear();
+            if (!(playerManager.GetPlayers(PlayerType.RUNNER).size() > 1)){
+                playerManager.ClearPlayers();
                 return false;
             }
             return true;
@@ -136,46 +128,23 @@ public class Tag {
 
     public boolean Stop(){
         if (started){
-            if (runners.size() > 0){
-                StringBuilder possibleWinners = new StringBuilder();
-                for (int i = 0; i < taggers.size(); i++){
-                    UnmakeTagger(taggers.get(i));
-                    if (i == taggers.size()-1 && runners.size() == 0){
-                        possibleWinners.append(taggers.get(i).getName());
-                    } else {
-                        possibleWinners.append(taggers.get(i).getName()).append(", ");
-                    }
-                }
-                for(int i = 0; i < runners.size(); i++){
-                    Objects.requireNonNull(scoreboard.getTeam("Runners")).removeEntry(runners.get(i).getName());
-                    if (i == runners.size()-1){
-                        possibleWinners.append(runners.get(i).getName());
-                    } else {
-                        possibleWinners.append(runners.get(i).getName()).append(", ");
-                    }
-                }
-                if (runners.size() + taggers.size() > 1){
-                    possibleWinners.append(" have won!");
-                } else {
-                    possibleWinners.append(" has won!");
-                }
-                for (Player p : allPlayersAndSpectators) {
-                    p.sendMessage(config.pluginPrefix + possibleWinners);
+            ArrayList<Player> runners = playerManager.GetPlayers(PlayerType.RUNNER);
+            if (runners.size() > 0 && GetHighestPoints() > 0){
+                for (Player player : playerManager.GetAllPlayers()){
+                    SendPointsMessage(player);
                 }
             }
-            for (Player p : allPlayersAndSpectators){
-                p.setScoreboard(saveOldScoreboard);
+            for (Player p : playerManager.GetAllPlayers()){
+                p.setScoreboard(oldScoreboard);
                 p.getInventory().clear();
             }
-            if (config.powerups){
+            if (config.isPowerups()){
                 Bukkit.getScheduler().runTaskLater(this.plugin, this.powerupHandler::DespawnPowerups, 20L);
             }
             Bukkit.getScheduler().runTaskLater(this.plugin, () -> HandlerList.unregisterAll(this.plugin), 20L);
+            Bukkit.getScheduler().runTaskLater(this.plugin, this.playerManager::ClearPlayers, 5L);
+            this.round = 0;
             this.started = false;
-            this.allPlayers.clear();
-            this.allPlayersAndSpectators.clear();
-            this.taggers.clear();
-            this.runners.clear();
             this.handler.StopTimer();
             this.worlds.clear();
 
@@ -213,71 +182,175 @@ public class Tag {
         }
     }
 
-    public void SelectTaggers(){
-        for (Player b : allPlayersAndSpectators){
-            this.scoreboard.resetScores(b.getName());
+    private void SendPointsMessage(Player player){
+        //// HEADER
+        StringBuilder message = new StringBuilder();
+        message.append("&8───────────── $pluginColor&lTag &8─────────────\n");
+        message.append("                           &e&lTop Five&r\n");
+        playerManager.SendMessage(player, message.toString());
+
+        //// MAIN
+        int highestPointCount = 0;
+        int playerPointCount = 0;
+        boolean playerIsTopFive = false;
+
+        // Get a list of players per point count
+        TreeMap<Integer, ArrayList<TagPlayer>> pointList = new TreeMap<>();
+        for (Player p : playerManager.GetAllPlayers()){
+            // Loop through all players and sort them by point count
+            TagPlayer tagPlayer = playerManager.GetTagPlayer(p);
+            int points = tagPlayer.getPoints();
+            // Edit highestPointCount if the player has a higher point count
+            if (highestPointCount < points){
+                highestPointCount = points;
+            }
+            // Check if a list with the same point count already exists
+            ArrayList<TagPlayer> playerList = pointList.get(points);
+            if (playerList == null){
+                playerList = new ArrayList<>();
+            }
+            // Add player point count to the list
+            playerList.add(tagPlayer);
+            // Add the changed list back to the point list
+            pointList.remove(points);
+            pointList.put(points, playerList);
         }
+
+        // Loop through all point count lists
+        for (int i = highestPointCount; i > highestPointCount - 5; i--){
+            message = new StringBuilder();
+            // Point count cannot be lower than 0
+            if (i >= 0) {
+                // Get list per point count
+                ArrayList<TagPlayer> tagPlayers = pointList.get(i);
+                if (tagPlayers == null){
+                    continue;
+                }
+                //// PERSON DEPENDANT
+                for (TagPlayer tagPlayer : tagPlayers) {
+                    if (tagPlayer.getPlayer().getName().equals(player.getName())) {
+                        playerIsTopFive = true;
+                        playerPointCount = tagPlayer.getPoints();
+                        break;
+                    }
+                }
+                // Create message if it fits on screen.
+                if (tagPlayers.size() < 3) {
+                    message.append("       ");
+                    message.append(ChatColor.YELLOW);
+                    message.append(i);
+                    message.append(" pts &8» ");
+                    for (TagPlayer tagPlayer : tagPlayers) {
+                        message.append(ChatColor.WHITE);
+                        message.append(tagPlayer.getPlayer().getName());
+                        if (tagPlayer.getBonusPoints() > 0){
+                            message.append(ChatColor.AQUA);
+                            message.append(" (+");
+                            message.append(tagPlayer.getBonusPoints());
+                            message.append(")");
+                        }
+                        message.append(ChatColor.WHITE);
+                        if (tagPlayers.indexOf(tagPlayer) != tagPlayers.size() - 1) {
+                            message.append(", ");
+                        }
+                    }
+                    playerManager.SendMessage(player, message.toString());
+                } else {
+                    TextComponent tc = new TextComponent(ChatColor.translateAlternateColorCodes('&', "&f       &e" + i + " pts &8» &f" + tagPlayers.size() + " players"));
+                    StringBuilder hover = new StringBuilder();
+                    hover.append(ChatColor.GOLD);
+                    hover.append("Players:\n");
+                    for (TagPlayer tagPlayer : tagPlayers){
+                        String playerName = tagPlayer.getPlayer().getName();
+                        if (playerName.equals(player.getName())){
+                            hover.append(ChatColor.YELLOW);
+                        } else {
+                            hover.append(ChatColor.WHITE);
+                        }
+                        hover.append(playerName);
+                        hover.append(ChatColor.WHITE);
+                        if (tagPlayers.indexOf(tagPlayer) != tagPlayers.size() - 1) {
+                            hover.append(", ");
+                        }
+                    }
+                    tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(hover.toString())));
+                    player.sendMessage(tc);
+                }
+            }
+        }
+        if (!playerIsTopFive){
+            message = new StringBuilder();
+            message.append(ChatColor.WHITE);
+            message.append("       ...\n");
+            message.append(ChatColor.YELLOW);
+            message.append("       ");
+            message.append(playerPointCount);
+            message.append(" pts &8» &e");
+            message.append(player.getName());
+            playerManager.SendMessage(player, message.toString());
+        }
+
+        //// FOOTER
+        message = new StringBuilder();
+        message.append("\n");
+        message.append("&8───────────── $pluginColor&lTag &8─────────────\n");
+        playerManager.SendMessage(player, message.toString());
+    }
+
+    private int GetHighestPoints(){
+        int highestPoints = 0;
+        for (Player p : playerManager.GetAllPlayers()){
+            TagPlayer tagPlayer = playerManager.GetTagPlayer(p);
+            int points = tagPlayer.getPoints();
+            if (highestPoints < points){
+                highestPoints = points;
+            }
+        }
+        return highestPoints;
+    }
+
+    public void SelectTaggers(){
+        for (Player player : playerManager.GetAllPlayers()){
+            this.scoreboard.resetScores(player.getName());
+        }
+        ArrayList<Player> runners = playerManager.GetPlayers(PlayerType.RUNNER);
+        ArrayList<Player> taggers = playerManager.GetPlayers(PlayerType.TAGGER);
+
+        StringBuilder message = new StringBuilder();
+        message.append("$pluginPrefix");
         double amountToBecomeTagged = Math.ceil((float) runners.size() / 4f);
         for (int i = 0; i < amountToBecomeTagged; i++){
             Random rnd = new Random();
             int selected = rnd.nextInt(runners.size());
-            Player p = runners.get(selected);
-            while (taggers.contains(p)){
+            Player player = runners.get(selected);
+            while (taggers.contains(player)){
                 selected = rnd.nextInt(runners.size());
-                p = runners.get(selected);
+                player = runners.get(selected);
             }
 
-            Score score = this.objective.getScore(p.getName());
+            Score score = this.objective.getScore(player.getName());
             score.setScore(i);
 
-            taggers.add(p);
-            runners.remove(p);
-            MakeTagger(p);
-            for (Player b : allPlayersAndSpectators){
-                b.sendMessage(config.pluginPrefix + ChatColor.RESET + p.getName() + ChatColor.RED + " is now a tagger.");
+            taggers.add(player);
+            playerManager.ChangePlayerType(player, PlayerType.TAGGER);
+            playerManager.MakeTagger(player);
+
+            message.append(ChatColor.RED);
+            message.append(player.getName());
+            message.append(ChatColor.WHITE);
+            if (i != amountToBecomeTagged - 1){
+                message.append(", ");
+            } else if (i == amountToBecomeTagged - 2){
+                message.append(" & ");
             }
         }
-    }
-
-    public void MakeTagger(Player p){
-        Objects.requireNonNull(scoreboard.getTeam("Runners")).removeEntry(p.getName());
-        Objects.requireNonNull(scoreboard.getTeam("Taggers")).addEntry(p.getName());
-        p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 1000000, 1, false, false));
-
-        ItemStack glass = new ItemStack(Material.RED_STAINED_GLASS, 1);
-        ItemMeta glassMeta = glass.getItemMeta();
-        glassMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "TAGGER!!!");
-        glass.setItemMeta(glassMeta);
-        for (int j = 0; j < 9; j++){
-            p.getInventory().setItem(j, glass);
+        message.append(ChatColor.WHITE);
+        if (amountToBecomeTagged == 1){
+            message.append(" is now a tagger!");
         }
-    }
-
-    public void UnmakeTagger(Player p){
-        Objects.requireNonNull(scoreboard.getTeam("Taggers")).removeEntry(p.getName());
-        Objects.requireNonNull(scoreboard.getTeam("Runners")).addEntry(p.getName());
-        p.removePotionEffect(PotionEffectType.GLOWING);
-        p.removePotionEffect(PotionEffectType.SPEED);
-
-        ItemStack air = new ItemStack(Material.AIR, 1);
-        for (int j = 0; j < 9; j++){
-            p.getInventory().setItem(j, air);
+        else {
+            message.append(" are now taggers!");
         }
-    }
-
-    public void EliminatePlayer(Player p){
-        UnmakeTagger(p);
-        Objects.requireNonNull(scoreboard.getTeam("Runners")).removeEntry(p.getName());
-        p.setGameMode(GameMode.SPECTATOR);
-        for (Player b : allPlayersAndSpectators){
-            b.sendMessage(config.pluginPrefix + ChatColor.RESET + p.getName() + ChatColor.DARK_RED + " is eliminated.");
-        }
-        taggers.remove(p);
-        allPlayers.remove(p);
-        map.getSpawn().getWorld().spawnParticle(Particle.FIREWORKS_SPARK, p.getLocation().add(0, 1, 0), 50, 0.5, 0.5, 0.5, 0.1);
-        map.getSpawn().getWorld().playSound(p.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_BLAST, 3, 1);
-        if (runners.size() == 1 || round == 10){
-            this.Stop();
-        }
+        playerManager.SendMessage(message.toString());
     }
 }

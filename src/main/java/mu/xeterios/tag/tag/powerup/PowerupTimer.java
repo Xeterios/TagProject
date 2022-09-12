@@ -21,17 +21,18 @@ public class PowerupTimer extends TimerTask {
 
     @Override
     public void run() {
-        if (tag.started){
+        PowerupSpawner spawner = handler.getSpawner();
+        if (tag.isStarted()){
             if (i == 0){
-                Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), handler.spawner::Spawn);
-                Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), handler.spawner::Spawn);
-                Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), handler.spawner::Spawn);
-                handler.spawner.RunTimer(15);
+                Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), spawner::Spawn);
+                Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), spawner::Spawn);
+                Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), spawner::Spawn);
+                spawner.RunTimer(15);
             } else {
                 i--;
             }
         } else {
-            handler.spawner.powerUpTimer.cancel();
+            spawner.getPowerUpTimer().cancel();
         }
     }
 }

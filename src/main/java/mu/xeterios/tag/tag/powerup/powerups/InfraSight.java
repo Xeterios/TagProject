@@ -12,6 +12,8 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Team;
 
+import java.util.Objects;
+
 public class InfraSight implements Powerup {
 
     @Override
@@ -36,29 +38,40 @@ public class InfraSight implements Powerup {
 
     @Override
     public void Trigger(Player player, PowerupHandler handler) {
-        PotionEffect effect = new PotionEffect(PotionEffectType.GLOWING, 100, 0, true, true, true);
-        Team runners = Main.getPlugin(Main.class).getTag().scoreboard.getTeam("Runners");
-        Team taggers = Main.getPlugin(Main.class).getTag().scoreboard.getTeam("Taggers");
+        Team runners = Main.getPlugin(Main.class).getTag().getScoreboard().getTeam("Runners");
+        Team taggers = Main.getPlugin(Main.class).getTag().getScoreboard().getTeam("Taggers");
         assert runners != null;
         assert taggers != null;
+
         if (runners.getEntries().contains(player.getName())){
-            for (String s : taggers.getEntries()){
-                Player p = Bukkit.getPlayer(s);
-                assert p != null;
-                p.addPotionEffect(effect);
-            }
-        } else {
-            if (taggers.getEntries().contains(player.getName())) {
-                for (String s : runners.getEntries()){
-                    Player p = Bukkit.getPlayer(s);
-                    assert p != null;
-                    p.addPotionEffect(effect);
-                }
-            }
+            int duration = GetDuration(taggers);
+            GiveEffect(taggers, duration);
+        } else if (taggers.getEntries().contains(player.getName())) {
+            int duration = GetDuration(runners);
+            GiveEffect(runners, duration);
         }
-        handler.infraSightActive = true;
-        Bukkit.getScheduler().runTaskLater(Main.getPlugin(Main.class), () -> handler.infraSightActive = false, 60L);
         player.sendTitle(ChatColor.YELLOW + "INFRA SIGHT", ChatColor.GRAY + "activated!", 0, 20, 10);
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 10, 2);
+    }
+
+    private int GetDuration(Team team){
+        for (String s : team.getEntries()){
+            Player p = Bukkit.getPlayer(s);
+            assert p != null;
+            if (p.getPotionEffect(PotionEffectType.GLOWING) != null){
+                return 100 + Objects.requireNonNull(p.getPotionEffect(PotionEffectType.GLOWING)).getDuration();
+            }
+        }
+        return 100;
+    }
+
+    private void GiveEffect(Team team, int duration){
+        PotionEffect effect = new PotionEffect(PotionEffectType.GLOWING, duration, 0, true, true, true);
+
+        for (String s : team.getEntries()){
+            Player p = Bukkit.getPlayer(s);
+            assert p != null;
+            p.addPotionEffect(effect);
+        }
     }
 }

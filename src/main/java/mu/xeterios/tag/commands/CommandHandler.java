@@ -53,7 +53,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                     cmd.Execute(sender, plugin, config);
                 }
             }
-            case NOPERM -> sender.sendMessage(config.pluginPrefix + ChatColor.RED + "You have no permission to use this command.");
+            case NOPERM -> sender.sendMessage(config.getPluginPrefix() + ChatColor.RED + "You have no permission to use this command.");
             case UNKNOWN -> {
                 Default df = new Default();
                 df.Execute(sender, plugin, config);
@@ -100,17 +100,17 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                     toReturn.add("@a");
                 }
                 if (args[0].equals("setspawn") && handler.CheckPermission("setspawn") == PermissionType.ALLOWED || args[0].equals("editregion") && handler.CheckPermission("editregion") == PermissionType.ALLOWED){
-                    for (Iterator<String> it = config.maps.keys().asIterator(); it.hasNext(); ) {
+                    for (Iterator<String> it = config.getMaps().keys().asIterator(); it.hasNext(); ) {
                         String info = it.next();
-                        toReturn.add(config.maps.get(info).getName());
+                        toReturn.add(config.getMaps().get(info).getName());
                     }
                 }
             }
             if (args.length == 3){
                 if (args[0].equals("start") && handler.CheckPermission("start") == PermissionType.ALLOWED){
-                    for (Iterator<String> it = config.maps.keys().asIterator(); it.hasNext(); ) {
+                    for (Iterator<String> it = config.getMaps().keys().asIterator(); it.hasNext(); ) {
                         String info = it.next();
-                        toReturn.add(config.maps.get(info).getName());
+                        toReturn.add(config.getMaps().get(info).getName());
                     }
                 }
             }

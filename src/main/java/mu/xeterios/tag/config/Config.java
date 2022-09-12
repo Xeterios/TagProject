@@ -1,5 +1,6 @@
 package mu.xeterios.tag.config;
 
+import lombok.Getter;
 import mu.xeterios.tag.Main;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -16,33 +17,33 @@ import java.util.Map;
 public class Config {
 
     private final Plugin plugin;
-    private final Main main;
-    public String pluginPrefix;
-    public String pluginColor;
-    public Dictionary<String, mu.xeterios.tag.config.Map> maps;
-    public boolean powerups;
-    public TreeMap<Double, String> powerupChances;
-    private Map<String, Double> powerupConfig;
 
-    public Config(Plugin plugin, Main main){
+    @Getter private String pluginPrefix;
+    @Getter private String pluginColor;
+
+    @Getter private Dictionary<String, mu.xeterios.tag.config.Map> maps;
+
+    @Getter private boolean powerups;
+    @Getter private TreeMap<Double, String> powerupChances;
+    @Getter private Map<String, Double> powerupConfig;
+
+    public Config(Plugin plugin){
         this.plugin = plugin;
-        this.main = main;
         LoadData();
     }
 
     public void LoadData(){
-        pluginPrefix = ChatColor.translateAlternateColorCodes('&', this.plugin.getConfig().getString("locale.prefix"));
+        pluginPrefix = ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(this.plugin.getConfig().getString("locale.prefix")));
         pluginColor = this.plugin.getConfig().getString("locale.color");
         powerups = plugin.getConfig().getBoolean("settings.powerups.enabled");
 
-        Map<Double, String> chances = new HashMap<>();
-        chances.put(plugin.getConfig().getDouble("settings.powerups.boost.chance"), "boost");
-        chances.put(plugin.getConfig().getDouble("settings.powerups.sniper.chance"), "sniper");
-        chances.put(plugin.getConfig().getDouble("settings.powerups.infrasight.chance"), "infrasight");
-        chances.put(plugin.getConfig().getDouble("settings.powerups.chains.chance"), "chains");
-        chances.put(plugin.getConfig().getDouble("settings.powerups.invisibility.chance"), "invisibility");
         this.powerupChances = new TreeMap<>();
-        powerupChances.putAll(chances);
+        powerupChances.put(plugin.getConfig().getDouble("settings.powerups.boost.chance"), "boost");
+        powerupChances.put(plugin.getConfig().getDouble("settings.powerups.sniper.chance"), "sniper");
+        powerupChances.put(plugin.getConfig().getDouble("settings.powerups.infrasight.chance"), "infrasight");
+        powerupChances.put(plugin.getConfig().getDouble("settings.powerups.chains.chance"), "chains");
+        powerupChances.put(plugin.getConfig().getDouble("settings.powerups.invisibility.chance"), "invisibility");
+        powerupChances.put(plugin.getConfig().getDouble("settings.powerups.shuffle.chance"), "shuffle");
 
         this.powerupConfig = new HashMap<>();
         powerupConfig.put("boost", plugin.getConfig().getDouble("settings.powerups.boost.chance"));
@@ -50,25 +51,7 @@ public class Config {
         powerupConfig.put("infrasight", plugin.getConfig().getDouble("settings.powerups.infrasight.chance"));
         powerupConfig.put("chains", plugin.getConfig().getDouble("settings.powerups.chains.chance"));
         powerupConfig.put("invisibility", plugin.getConfig().getDouble("settings.powerups.invisibility.chance"));
-
-/*        World world = Bukkit.getWorld(plugin.getConfig().get("settings.spawnpoint.world").toString());
-        double spawnX = plugin.getConfig().getDouble("settings.spawnpoint.location.x");
-        double spawnY = plugin.getConfig().getDouble("settings.spawnpoint.location.y");
-        double spawnZ = plugin.getConfig().getDouble("settings.spawnpoint.location.z");
-        float spawnYaw = (float) plugin.getConfig().getDouble("settings.spawnpoint.location.yaw");
-        float spawnPitch = (float) plugin.getConfig().getDouble("settings.spawnpoint.location.pitch");
-        this.location = new Location(world, spawnX, spawnY, spawnZ, spawnYaw, spawnPitch);
-
-        World regionWorld = Bukkit.getWorld(plugin.getConfig().get("settings.region.world").toString());
-        double pos1X = plugin.getConfig().getDouble("settings.region.pos1.x");
-        double pos1Y = plugin.getConfig().getDouble("settings.region.pos1.y");
-        double pos1Z = plugin.getConfig().getDouble("settings.region.pos1.z");
-        this.minRegion = new Location(regionWorld, pos1X, pos1Y, pos1Z);
-
-        double pos2X = plugin.getConfig().getDouble("settings.region.pos2.x");
-        double pos2Y = plugin.getConfig().getDouble("settings.region.pos2.y");
-        double pos2Z = plugin.getConfig().getDouble("settings.region.pos2.z");
-        this.maxRegion = new Location(regionWorld, pos2X, pos2Y, pos2Z);*/
+        powerupConfig.put("shuffle", plugin.getConfig().getDouble("settings.powerups.shuffle.chance"));
 
         this.maps = new Hashtable<>();
 
@@ -122,6 +105,7 @@ public class Config {
         this.plugin.getConfig().set("settings.powerups.infrasight.chance", this.powerupConfig.get("infrasight"));
         this.plugin.getConfig().set("settings.powerups.chains.chance", this.powerupConfig.get("chains"));
         this.plugin.getConfig().set("settings.powerups.invisibility.chance", this.powerupConfig.get("invisibility"));
+        this.plugin.getConfig().set("settings.powerups.shuffle.chance", this.powerupConfig.get("shuffle"));
 
         this.plugin.getConfig().set("locale.prefix", this.pluginPrefix);
         this.plugin.getConfig().set("locale.color", this.pluginColor);

@@ -1,5 +1,7 @@
 package mu.xeterios.tag.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.SerializableAs;
@@ -10,10 +12,14 @@ import java.util.HashMap;
 @SerializableAs("Map")
 public class Map implements ConfigurationSerializable {
 
-    private String name;
-    private Location spawn;
-    private Location min;
-    private Location max;
+    @Getter @Setter private String name;
+    @Getter @Setter private Location spawn;
+    @Getter private Location min;
+    @Getter private Location max;
+
+    public Map() {
+
+    }
 
     public Map(String name, Location spawn, Location min, Location max) {
         this.name = name;
@@ -22,37 +28,9 @@ public class Map implements ConfigurationSerializable {
         this.max = max;
     }
 
-    public Map() {
-
-    }
-
-    public void setSpawn(Location spawn) {
-        this.spawn = spawn;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public void setRegions(Location pos1, Location pos2) {
         this.min = pos1;
         this.max = pos2;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Location getSpawn() {
-        return spawn;
-    }
-
-    public Location getMin() {
-        return min;
-    }
-
-    public Location getMax() {
-        return max;
     }
 
     @Override

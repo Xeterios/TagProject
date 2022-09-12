@@ -14,8 +14,8 @@ public class PowerupFactory {
 
     public PowerupFactory(){
         this.chanceMap = new TreeMap<>();
-        List<Double> keys = new ArrayList<>(Main.getPlugin(Main.class).getTag().config.powerupChances.keySet());
-        List<String> values = new ArrayList<>(Main.getPlugin(Main.class).getTag().config.powerupChances.values());
+        List<Double> keys = new ArrayList<>(Main.getPlugin(Main.class).getTag().getConfig().getPowerupChances().keySet());
+        List<String> values = new ArrayList<>(Main.getPlugin(Main.class).getTag().getConfig().getPowerupChances().values());
         for (int i = 0; i < keys.size(); i++){
             if (i > 0){
                 if (!(keys.get(i) == 0)) {
@@ -42,6 +42,7 @@ public class PowerupFactory {
             case "infrasight" -> new InfraSight();
             case "chains" -> new Chains();
             case "invisibility" -> new Invisibility();
+            case "shuffle" -> new Shuffle();
             default -> null;
         };
     }
@@ -53,6 +54,7 @@ public class PowerupFactory {
             case GLOWSTONE_DUST -> new InfraSight();
             case SPLASH_POTION -> new Chains();
             case FEATHER -> new Invisibility();
+            case BOOK -> new Shuffle();
             default -> null;
         };
     }

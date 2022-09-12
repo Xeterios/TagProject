@@ -14,12 +14,12 @@ public class Stop implements Cmd {
         if (!tag.Stop()){
             SendFaultyMessage(sender, main, config);
         } else {
-            sender.sendMessage(config.pluginPrefix + "Tag stopped.");
+            sender.sendMessage(config.getPluginPrefix() + "Tag stopped.");
         }
     }
 
     @Override
     public void SendFaultyMessage(CommandSender sender, Main main, Config config) {
-        sender.sendMessage(config.pluginPrefix + ChatColor.RED + "Tag is not started.");
+        sender.sendMessage(config.getPluginPrefix() + ChatColor.RED + "Tag is not started.");
     }
 }

@@ -13,6 +13,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.Objects;
+
 
 public class Invisibility implements Powerup {
 
@@ -38,7 +40,11 @@ public class Invisibility implements Powerup {
 
     @Override
     public void Trigger(Player p, PowerupHandler handler) {
-        PotionEffect effect = new PotionEffect(PotionEffectType.INVISIBILITY, 80, 0);
+        int duration = 80;
+        if (p.getPotionEffect(PotionEffectType.INVISIBILITY) != null){
+            duration += Objects.requireNonNull(p.getPotionEffect(PotionEffectType.INVISIBILITY)).getDuration();
+        }
+        PotionEffect effect = new PotionEffect(PotionEffectType.INVISIBILITY, duration, 0);
         p.addPotionEffect(effect);
         p.playSound(p.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 10, 1);
         p.sendTitle(ChatColor.GRAY + "INVISIBILITY", ChatColor.GRAY + "activated!", 0, 20, 10);
