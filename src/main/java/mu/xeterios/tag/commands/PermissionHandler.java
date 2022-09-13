@@ -35,6 +35,7 @@ public class PermissionHandler {
         nodes.put("editregion", "tag.editregion");
         nodes.put("createmap", "tag.createmap");
         nodes.put("maps", "tag.maps");
+        nodes.put("profile", "tag.profile");
         nodes.put("stop", "tag.stop");
         nodes.put("start", "tag.start");
         nodes.put("reload", "tag.reload");

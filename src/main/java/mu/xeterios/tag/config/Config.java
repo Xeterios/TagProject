@@ -2,6 +2,8 @@ package mu.xeterios.tag.config;
 
 import lombok.Getter;
 import mu.xeterios.tag.Main;
+import mu.xeterios.tag.tag.players.PlayerData;
+import mu.xeterios.tag.tag.players.PlayerDataHandler;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -21,6 +23,8 @@ public class Config {
     @Getter private String pluginPrefix;
     @Getter private String pluginColor;
 
+    @Getter private PlayerDataHandler playerDataHandler;
+
     @Getter private Dictionary<String, mu.xeterios.tag.config.Map> maps;
 
     @Getter private boolean powerups;
@@ -30,6 +34,10 @@ public class Config {
     public Config(Plugin plugin){
         this.plugin = plugin;
         LoadData();
+    }
+
+    public void SetPlayerDataHandler(PlayerDataHandler playerDataHandler){
+        this.playerDataHandler = playerDataHandler;
     }
 
     public void LoadData(){
@@ -75,6 +83,28 @@ public class Config {
         }
     }
 
+    public ArrayList<PlayerData> LoadPlayerData(){
+        ArrayList<PlayerData> allPlayerData = new ArrayList<>();
+        File fl = new File(Main.getPlugin(Main.class).getDataFolder() + File.separator + "players");
+        File[] files = fl.listFiles();
+        if (files != null){
+            for (File child : files){
+                FileConfiguration config = new YamlConfiguration();
+                try {
+                    config.load(child);
+                } catch (IOException | InvalidConfigurationException e) {
+                    e.printStackTrace();
+                }
+                for (String string : config.getKeys(false)){
+                    PlayerData playerData = config.getObject(string, PlayerData.class);
+                    assert playerData != null;
+                    allPlayerData.add(playerData);
+                }
+            }
+        }
+        return allPlayerData;
+    }
+
     public void EditSpawn(Location spawn, mu.xeterios.tag.config.Map map){
         map.setSpawn(spawn);
     }
@@ -111,10 +141,10 @@ public class Config {
         this.plugin.getConfig().set("locale.color", this.pluginColor);
 
         this.plugin.saveConfig();
-        saveCustomConfig();
+        SaveMaps();
     }
 
-    public void saveCustomConfig(){
+    public void SaveMaps(){
         // Iterate through all maps
         for (Iterator<String> it = this.maps.keys().asIterator(); it.hasNext(); ) {
             String info = it.next();
@@ -131,6 +161,28 @@ public class Config {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public void SavePlayer(PlayerData data){
+        // Create new file
+        File fl = new File(Main.getPlugin(Main.class).getDataFolder() + File.separator + "players", data.getUuid() + ".yml");
+        FileConfiguration fc = new YamlConfiguration();
+        // Set config content to serialized map data
+        fc.set(fl.getName().replace(".yml", ""), data);
+        try {
+            // Save file
+            fc.save(fl);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void SavePlayer(ArrayList<PlayerData> playerData){
+        // Iterate through all maps
+        for (PlayerData data : playerData){
+            // Create new file
+            SavePlayer(data);
         }
     }
 

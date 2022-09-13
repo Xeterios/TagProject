@@ -8,6 +8,7 @@ public class CmdFactory {
             case "editregion" -> new EditRegion(args);
             case "createmap" -> new CreateMap(args);
             case "maps" -> new Maps();
+            case "profile" -> new Profile(args);
             case "start" -> new Start(args);
             case "stop" -> new Stop();
             case "reload" -> new Reload();

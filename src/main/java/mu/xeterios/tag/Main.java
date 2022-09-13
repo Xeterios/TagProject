@@ -1,24 +1,28 @@
 package mu.xeterios.tag;
 
+import lombok.Getter;
 import mu.xeterios.tag.commands.CommandHandler;
 import mu.xeterios.tag.config.Config;
 import mu.xeterios.tag.config.Map;
+import mu.xeterios.tag.tag.PlayerHandler;
 import mu.xeterios.tag.tag.Tag;
+import mu.xeterios.tag.tag.players.PlayerData;
+import mu.xeterios.tag.tag.players.PlayerDataHandler;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class Main extends JavaPlugin {
 
     private Tag tag;
+
+    @Getter private PlayerDataHandler playerDataHandler;
+    private PlayerHandler playerHandler;
     private Config config;
 
     public File customConfigFile;
@@ -30,6 +34,7 @@ public final class Main extends JavaPlugin {
     public void onLoad() {
         // Plugin startup logic
         ConfigurationSerialization.registerClass(Map.class, "Map");
+        ConfigurationSerialization.registerClass(PlayerData.class, "PlayerData");
     }
 
 
@@ -40,15 +45,23 @@ public final class Main extends JavaPlugin {
         getConfig().options().copyDefaults();
         saveDefaultConfig();
         this.config = new Config(this);
-        this.tag = new Tag(this);
-        this.getCommand("tag").setExecutor(new CommandHandler(this, config));
-        config.saveCustomConfig();
+        this.playerDataHandler = new PlayerDataHandler(config);
+        this.playerHandler = new PlayerHandler(config, playerDataHandler);
+        this.config.SetPlayerDataHandler(playerDataHandler);
+        this.tag = new Tag(this, playerDataHandler);
+        Bukkit.getPluginManager().registerEvents(playerHandler, Main.getPlugin(Main.class));
+        CommandHandler handler = new CommandHandler(this, config);
+        this.getCommand("tag").setExecutor(handler);
+        this.getCommand("profile").setExecutor(handler);
+        config.SaveMaps();
     }
 
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        this.config.SavePlayer(playerDataHandler.getAllPlayerData());
         this.tag.Stop();
+        HandlerList.unregisterAll();
     }
 
     private void createCustomConfig() {

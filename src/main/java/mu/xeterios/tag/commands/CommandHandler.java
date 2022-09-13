@@ -13,6 +13,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -79,6 +80,9 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 if (handler.CheckPermission("maps") == PermissionType.ALLOWED){
                     toReturn.add("maps");
                 }
+                if (handler.CheckPermission("profile") == PermissionType.ALLOWED){
+                    toReturn.add("profile");
+                }
                 if (handler.CheckPermission("start") == PermissionType.ALLOWED){
                     toReturn.add("start");
                 }
@@ -103,6 +107,11 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                     for (Iterator<String> it = config.getMaps().keys().asIterator(); it.hasNext(); ) {
                         String info = it.next();
                         toReturn.add(config.getMaps().get(info).getName());
+                    }
+                }
+                if (args[0].equals("profile") && handler.CheckPermission("profile") == PermissionType.ALLOWED){
+                    for (Player player : Bukkit.getOnlinePlayers()){
+                        toReturn.add(player.getName());
                     }
                 }
             }

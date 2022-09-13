@@ -9,3 +9,6 @@ commands:
   tag:
     description: Control the tag plugin
     usage: /<command>
+  profile:
+    description: Show your tag profile
+    usage: /<command>

@@ -5,6 +5,7 @@ import lombok.Setter;
 import mu.xeterios.tag.Main;
 import mu.xeterios.tag.config.Config;
 import mu.xeterios.tag.config.Map;
+import mu.xeterios.tag.tag.players.PlayerDataHandler;
 import mu.xeterios.tag.tag.players.PlayerManager;
 import mu.xeterios.tag.tag.players.PlayerType;
 import mu.xeterios.tag.tag.players.TagPlayer;
@@ -39,12 +40,15 @@ public class Tag {
     @Getter private PowerupHandler powerupHandler;
     private final EventsHandler eventsHandler;
 
-    public Tag(Main plugin){
+    @Getter private final PlayerDataHandler playerDataHandler;
+
+    public Tag(Main plugin, PlayerDataHandler playerDataHandler){
         this.plugin = plugin;
         this.playerManager = new PlayerManager(this);
         this.worlds = new ArrayList<>();
         this.handler = new TimerHandler(this);
         this.eventsHandler = new EventsHandler(this);
+        this.playerDataHandler = playerDataHandler;
     }
 
     public void Start(){
@@ -141,7 +145,8 @@ public class Tag {
             if (config.isPowerups()){
                 Bukkit.getScheduler().runTaskLater(this.plugin, this.powerupHandler::DespawnPowerups, 20L);
             }
-            Bukkit.getScheduler().runTaskLater(this.plugin, () -> HandlerList.unregisterAll(this.plugin), 20L);
+            Bukkit.getScheduler().runTaskLater(this.plugin, () -> HandlerList.unregisterAll(this.eventsHandler), 2L);
+            Bukkit.getScheduler().runTaskLater(this.plugin, () -> HandlerList.unregisterAll(this.powerupHandler), 2L);
             Bukkit.getScheduler().runTaskLater(this.plugin, this.playerManager::ClearPlayers, 5L);
             this.round = 0;
             this.started = false;

@@ -1,6 +1,5 @@
 package mu.xeterios.tag.tag.players;
 
-import lombok.Getter;
 import mu.xeterios.tag.Main;
 import mu.xeterios.tag.tag.Tag;
 import org.bukkit.*;
@@ -71,6 +70,16 @@ public class PlayerManager {
 
         if (GetPlayers(PlayerType.RUNNER).size() == 1 || tag.getRound() == 10){
             tag.Stop();
+            for(Player p : GetAllPlayers()){
+                TagPlayer tagPlayer = GetTagPlayer(p);
+                PlayerData playerData = tag.getPlayerDataHandler().GetPlayer(p);
+                playerData.addPoints(tagPlayer.getPoints() + tagPlayer.getBonusPoints());
+                if (tagPlayer.getType().equals(PlayerType.RUNNER)){
+                    playerData.addWin();
+                }
+                tag.getConfig().SavePlayer(playerData);
+                Main.getPlugin(Main.class).getLogger().info(p.getName() + " now has " + playerData.getTotalPoints() + " points and has " + playerData.getTotalWins() + " wins");
+            }
         }
     }
 

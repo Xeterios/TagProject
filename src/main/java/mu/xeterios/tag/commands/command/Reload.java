@@ -12,7 +12,7 @@ public class Reload implements Cmd {
     public void Execute(CommandSender sender, Main main, Config config) {
         main.getTag().Stop();
         config.ReloadConfig();
-        main.setTag(new Tag(main));
+        main.setTag(new Tag(main, main.getPlayerDataHandler()));
         sender.sendMessage(config.getPluginPrefix() + ChatColor.GREEN + "Plugin reloaded successfully!");
     }
 
