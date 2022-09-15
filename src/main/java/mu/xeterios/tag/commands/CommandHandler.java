@@ -35,21 +35,18 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         PermissionHandler handler = new PermissionHandler(sender);
         PermissionType type = handler.CheckPermission(command.getLabel());
-        String[] newArgs = { command.getLabel() };
-        if (args.length > 0 && type == PermissionType.ALLOWED){
+        if (args.length > 0 && type == PermissionType.ALLOWED && PermissionHandler.IsCommandMain(label)){
             type = handler.CheckPermission(args[0]);
-            CheckPermission(sender, args, type);
-        } else {
-            CheckPermission(sender, newArgs, type);
         }
+        CheckPermission(sender, label, args, type);
         return true;
     }
 
-    public void CheckPermission(CommandSender sender, String[] args, PermissionType type) {
+    public void CheckPermission(CommandSender sender, String label, String[] args, PermissionType type) {
         switch (type) {
             case ALLOWED -> {
                 CmdFactory cmdFactory = new CmdFactory();
-                Cmd cmd = cmdFactory.GetCommand(args);
+                Cmd cmd = cmdFactory.GetCommand(label, args);
                 if (cmd != null) {
                     cmd.Execute(sender, plugin, config);
                 }
@@ -82,6 +79,9 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 }
                 if (handler.CheckPermission("profile") == PermissionType.ALLOWED){
                     toReturn.add("profile");
+                }
+                if (handler.CheckPermission("leaderboard") == PermissionType.ALLOWED){
+                    toReturn.add("leaderboard");
                 }
                 if (handler.CheckPermission("start") == PermissionType.ALLOWED){
                     toReturn.add("start");

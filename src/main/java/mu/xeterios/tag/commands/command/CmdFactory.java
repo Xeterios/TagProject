@@ -2,19 +2,28 @@ package mu.xeterios.tag.commands.command;
 
 public class CmdFactory {
 
-    public Cmd GetCommand(String[] args){
-        return switch (args[0]) {
-            case "setspawn" -> new SetSpawn(args);
-            case "editregion" -> new EditRegion(args);
-            case "createmap" -> new CreateMap(args);
-            case "maps" -> new Maps();
-            case "profile" -> new Profile(args);
-            case "start" -> new Start(args);
-            case "stop" -> new Stop();
-            case "reload" -> new Reload();
-            case "tag" -> new Default();
-            case "about" -> new About();
-            default -> null;
-        };
+    public Cmd GetCommand(String label, String[] args){
+        Cmd cmd = new Default();
+        switch (label){
+            case "tag" -> {
+                if (args.length > 0) {
+                    switch (args[0]) {
+                        case "setspawn" -> cmd = new SetSpawn(args);
+                        case "editregion" -> cmd = new EditRegion(args);
+                        case "createmap" -> cmd = new CreateMap(args);
+                        case "maps" -> cmd = new Maps();
+                        case "profile" -> cmd = new Profile(args);
+                        case "leaderboard" -> cmd = new Leaderboard();
+                        case "start" -> cmd = new Start(args);
+                        case "stop" -> cmd = new Stop();
+                        case "reload" -> cmd = new Reload();
+                        case "about" -> cmd = new About();
+                    }
+                }
+            }
+            case "profile" -> cmd = new Profile(args);
+            case "leaderboard" -> cmd = new Leaderboard();
+        }
+        return cmd;
     }
 }

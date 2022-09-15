@@ -62,6 +62,8 @@ public class PlayerManager {
         ChangePlayerType(player, PlayerType.SPECTATOR);
         player.setGameMode(GameMode.SPECTATOR);
 
+        tag.getPlayerDataHandler().GetPlayer(player).resetWinStreakCount();
+
         String message = "$pluginPrefix" + ChatColor.RED + player.getName() + ChatColor.DARK_RED + " is eliminated.";
         SendMessage(message);
 

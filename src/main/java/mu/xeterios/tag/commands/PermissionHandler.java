@@ -3,13 +3,14 @@ package mu.xeterios.tag.commands;
 import mu.xeterios.tag.commands.command.PermissionType;
 import org.bukkit.command.CommandSender;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 public class PermissionHandler {
 
     private final CommandSender sender;
-    private Dictionary<String, String> nodes;
+    private final Dictionary<String, String> nodes;
 
     public PermissionHandler(CommandSender player){
         this.sender = player;
@@ -29,6 +30,19 @@ public class PermissionHandler {
         }
     }
 
+    public static boolean IsCommandMain(String label){
+        ArrayList<String> allLabels = new ArrayList<>();
+        allLabels.add("tag");
+        allLabels.add("profile");
+        allLabels.add("leaderboard");
+        for(String string : allLabels){
+            if (label.equals(string)){
+                return false;
+            }
+        }
+        return true;
+    }
+
     public void FillNodes(){
         nodes.put("tag", "tag.help");
         nodes.put("setspawn", "tag.setspawn");
@@ -36,6 +50,7 @@ public class PermissionHandler {
         nodes.put("createmap", "tag.createmap");
         nodes.put("maps", "tag.maps");
         nodes.put("profile", "tag.profile");
+        nodes.put("leaderboard", "tag.leaderboard");
         nodes.put("stop", "tag.stop");
         nodes.put("start", "tag.start");
         nodes.put("reload", "tag.reload");

@@ -111,6 +111,7 @@ public class Tag {
                     }
                 }
             }
+            Main.getPlugin(Main.class).getLogger().info(String.valueOf(toAdd.size()));
             for(Player player : toAdd){
                 if (player.hasPermission("tag.exempt")) {
                     playerManager.AddPlayer(player);

@@ -7,7 +7,9 @@ import mu.xeterios.tag.tag.players.PlayerType;
 import mu.xeterios.tag.tag.players.TagPlayer;
 import mu.xeterios.tag.tag.powerup.PowerupFactory;
 import mu.xeterios.tag.tag.powerup.PowerupSpawner;
+import mu.xeterios.tag.tag.powerup.powerups.InfraSight;
 import mu.xeterios.tag.tag.powerup.powerups.Powerup;
+import mu.xeterios.tag.tag.powerup.powerups.Shuffle;
 import mu.xeterios.tag.tag.powerup.powerups.Sniper;
 import org.bukkit.*;
 import org.bukkit.entity.*;
@@ -70,6 +72,15 @@ public class PowerupHandler implements Listener {
                             location2.getBlock().setType(Material.AIR);
                         }
                     }
+                }
+            }
+            if (powerup instanceof Shuffle){
+                for (Player player : playerManager.GetAllPlayers()){
+                    player.playSound(player, Sound.ENTITY_WITHER_SPAWN, 10, 2);
+                }
+            } else if (powerup instanceof InfraSight){
+                for (Player player : playerManager.GetAllPlayers()){
+                    player.playSound(player, Sound.BLOCK_BEACON_ACTIVATE, 10, 2);
                 }
             }
             this.powerupLocations.remove(location);

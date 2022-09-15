@@ -188,6 +188,7 @@ public class Config {
 
     public void ReloadConfig(){
         this.plugin.reloadConfig();
+        this.playerDataHandler.LoadData(LoadPlayerData());
         LoadData();
     }
 }

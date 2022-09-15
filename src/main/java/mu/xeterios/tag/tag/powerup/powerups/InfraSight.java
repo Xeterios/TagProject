@@ -16,6 +16,8 @@ import java.util.Objects;
 
 public class InfraSight implements Powerup {
 
+
+
     @Override
     public ItemStack GetItem() {
         ItemStack item = new ItemStack(Material.GLOWSTONE_DUST, 1);

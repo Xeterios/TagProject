@@ -12,3 +12,6 @@ commands:
   profile:
     description: Show your tag profile
     usage: /<command>
+  leaderboard:
+    description: Shows the tag leaderboard
+    usage: /<command>

@@ -53,6 +53,7 @@ public final class Main extends JavaPlugin {
         CommandHandler handler = new CommandHandler(this, config);
         this.getCommand("tag").setExecutor(handler);
         this.getCommand("profile").setExecutor(handler);
+        this.getCommand("leaderboard").setExecutor(handler);
         config.SaveMaps();
     }
 
