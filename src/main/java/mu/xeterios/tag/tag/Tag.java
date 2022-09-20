@@ -53,8 +53,6 @@ public class Tag {
 
     public void Start(){
         if (!started){
-            plugin.getServer().getPluginManager().registerEvents(eventsHandler, this.plugin);
-
             for (Player player : playerManager.GetAllPlayers()){
                 player.getInventory().clear();
                 player.setScoreboard(scoreboard);
@@ -111,7 +109,6 @@ public class Tag {
                     }
                 }
             }
-            Main.getPlugin(Main.class).getLogger().info(String.valueOf(toAdd.size()));
             for(Player player : toAdd){
                 if (player.hasPermission("tag.exempt")) {
                     playerManager.AddPlayer(player);
@@ -205,21 +202,25 @@ public class Tag {
         for (Player p : playerManager.GetAllPlayers()){
             // Loop through all players and sort them by point count
             TagPlayer tagPlayer = playerManager.GetTagPlayer(p);
-            int points = tagPlayer.getPoints();
-            // Edit highestPointCount if the player has a higher point count
-            if (highestPointCount < points){
-                highestPointCount = points;
+            if (!tagPlayer.getType().equals(PlayerType.SPECTATOR)){
+                int points = tagPlayer.getPoints();
+                // Edit highestPointCount if the player has a higher point count
+                if (highestPointCount < points){
+                    highestPointCount = points;
+                }
+                // Check if a list with the same point count already exists
+                ArrayList<TagPlayer> playerList = pointList.get(points);
+                if (playerList == null){
+                    playerList = new ArrayList<>();
+                }
+                // Add player point count to the list
+                playerList.add(tagPlayer);
+                // Add the changed list back to the point list
+                pointList.remove(points);
+                pointList.put(points, playerList);
+            } else {
+                playerIsTopFive = true;
             }
-            // Check if a list with the same point count already exists
-            ArrayList<TagPlayer> playerList = pointList.get(points);
-            if (playerList == null){
-                playerList = new ArrayList<>();
-            }
-            // Add player point count to the list
-            playerList.add(tagPlayer);
-            // Add the changed list back to the point list
-            pointList.remove(points);
-            pointList.put(points, playerList);
         }
 
         // Loop through all point count lists

@@ -51,6 +51,8 @@ public class PermissionHandler {
         nodes.put("maps", "tag.maps");
         nodes.put("profile", "tag.profile");
         nodes.put("leaderboard", "tag.leaderboard");
+        nodes.put("points", "tag.points");
+        nodes.put("wins", "tag.wins");
         nodes.put("stop", "tag.stop");
         nodes.put("start", "tag.start");
         nodes.put("reload", "tag.reload");

@@ -7,6 +7,7 @@ import mu.xeterios.tag.config.Region;
 import mu.xeterios.tag.tag.PowerupHandler;
 import mu.xeterios.tag.tag.Tag;
 import mu.xeterios.tag.tag.powerup.powerups.Powerup;
+import mu.xeterios.tag.tag.powerup.powerups.Shuffle;
 import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Light;
@@ -92,5 +93,13 @@ public class PowerupSpawner {
             hologram.setCustomName(powerup.GetHologramName());
             hologram.setCustomNameVisible(true);
         });
+
+        // Send message in case of shuffle
+        if (powerup instanceof Shuffle){
+            tag.getPlayerManager().SendMessage("$pluginPrefix&5A &lSHUFFLE &5has spawned!");
+            for (Player player : tag.getPlayerManager().GetAllPlayers()){
+                player.playSound(player, Sound.ITEM_TRIDENT_THUNDER, 10, 2);
+            }
+        }
     }
 }

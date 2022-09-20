@@ -33,7 +33,7 @@ public class ProfileInventory implements Listener {
     }
 
     private void SetupInventory(){
-        ItemStack playerHead = PlayerData.getPlayerHead(target, playerData, playerDataHandler, null);
+        ItemStack playerHead = PlayerData.getPlayerHead(target, playerData, playerDataHandler, LeaderboardType.Wins);
         inventory.setItem(13, playerHead);
     }
 

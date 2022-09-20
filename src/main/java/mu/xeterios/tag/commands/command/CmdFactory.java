@@ -14,6 +14,8 @@ public class CmdFactory {
                         case "maps" -> cmd = new Maps();
                         case "profile" -> cmd = new Profile(args);
                         case "leaderboard" -> cmd = new Leaderboard();
+                        case "points" -> cmd = new Points(args);
+                        case "wins" -> cmd = new Wins(args);
                         case "start" -> cmd = new Start(args);
                         case "stop" -> cmd = new Stop();
                         case "reload" -> cmd = new Reload();

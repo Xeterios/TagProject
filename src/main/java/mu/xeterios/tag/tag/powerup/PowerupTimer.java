@@ -27,6 +27,9 @@ public class PowerupTimer extends TimerTask {
                 Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), spawner::Spawn);
                 Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), spawner::Spawn);
                 Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), spawner::Spawn);
+                Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), spawner::Spawn);
+                Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), spawner::Spawn);
+                Bukkit.getScheduler().runTask(Main.getPlugin(Main.class), spawner::Spawn);
                 spawner.RunTimer(15);
             } else {
                 i--;

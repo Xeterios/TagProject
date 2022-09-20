@@ -1,7 +1,10 @@
 package mu.xeterios.tag.tag.players;
 
+import lombok.Getter;
+import lombok.Setter;
 import mu.xeterios.tag.Main;
 import mu.xeterios.tag.tag.Tag;
+import mu.xeterios.tag.tag.timer.EffectTimer;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -12,17 +15,22 @@ import org.bukkit.scoreboard.Score;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Timer;
 import java.util.logging.Level;
 
 public class PlayerManager {
 
     private final Tag tag;
+    @Getter @Setter private Timer effectTimer;
+    @Getter @Setter private Timer effectTimer2;
 
     private final ArrayList<TagPlayer> players;
 
     public PlayerManager(Tag tag){
         this.tag = tag;
         this.players = new ArrayList<>();
+        this.effectTimer = new Timer();
+        this.effectTimer2 = new Timer();
     }
 
     public void AddPlayer(Player player){
@@ -37,6 +45,7 @@ public class PlayerManager {
 
     public void MakeTagger(Player player){
         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 1000000, 1, false, false));
+        player.removePotionEffect(PotionEffectType.GLOWING);
 
         ItemStack glass = new ItemStack(Material.RED_STAINED_GLASS, 1);
         ItemMeta glassMeta = glass.getItemMeta();
@@ -50,6 +59,7 @@ public class PlayerManager {
 
     public void MakeRunner(Player player){
         player.removePotionEffect(PotionEffectType.SPEED);
+        player.removePotionEffect(PotionEffectType.GLOWING);
 
         ItemStack air = new ItemStack(Material.AIR, 1);
         for (int j = 0; j < 9; j++){
@@ -59,7 +69,7 @@ public class PlayerManager {
 
     public void EliminatePlayer(Player player){
         MakeRunner(player);
-        ChangePlayerType(player, PlayerType.SPECTATOR);
+        ChangePlayerType(player, PlayerType.ELIMINATED);
         player.setGameMode(GameMode.SPECTATOR);
 
         tag.getPlayerDataHandler().GetPlayer(player).resetWinStreakCount();
@@ -111,10 +121,20 @@ public class PlayerManager {
                 Objects.requireNonNull(tag.getScoreboard().getTeam("Runners")).removeEntry(player.getName());
                 Objects.requireNonNull(tag.getScoreboard().getTeam("Taggers")).addEntry(player.getName());
             }
-            case SPECTATOR -> {
+            case ELIMINATED, SPECTATOR -> {
                 Objects.requireNonNull(tag.getScoreboard().getTeam("Runners")).removeEntry(player.getName());
                 Objects.requireNonNull(tag.getScoreboard().getTeam("Taggers")).removeEntry(player.getName());
             }
+        }
+    }
+
+    public void GiveEffect(PlayerType playerType, PotionEffect effect){
+        int period = 1000;
+        EffectTimer effectTask = new EffectTimer(this, effect, period, playerType);
+        if (playerType.equals(PlayerType.TAGGER)){
+            effectTimer.schedule(effectTask, 0, period);
+        } else {
+            effectTimer2.schedule(effectTask, 0, period);
         }
     }
 

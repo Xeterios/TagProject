@@ -151,16 +151,25 @@ public class PowerupHandler implements Listener {
     public void OnPotionHit(PotionSplashEvent e){
         ArrayList<PotionEffectType> types = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
-
         PotionMeta meta = e.getPotion().getPotionMeta();
         for(PotionEffect effects : meta.getCustomEffects()){
             types.add(effects.getType());
         }
-
         if (types.contains(PotionEffectType.BLINDNESS) && types.contains(PotionEffectType.SLOW)){
             sb.append(ChatColor.DARK_GRAY);
             sb.append(ChatColor.BOLD);
             sb.append("CHAINED");
+        }
+        ArrayList<Player> affectedPlayers = new ArrayList<>();
+        for(LivingEntity entity : e.getAffectedEntities()) {
+            if (entity instanceof Player p) {
+                if (!p.getGameMode().equals(GameMode.SPECTATOR)){
+                    affectedPlayers.add(p);
+                }
+            }
+        }
+        if (affectedPlayers.size() <= 0){
+            return;
         }
 
         ThrownPotion potion = e.getPotion();
@@ -169,29 +178,26 @@ public class PowerupHandler implements Listener {
             // Create message
             StringBuilder message = new StringBuilder();
             message.append("$pluginPrefix&fYou have &8&lCHAINED&r ");
-            Collection<LivingEntity> affectedEntities = e.getAffectedEntities();
-            if (affectedEntities.size() < 4){
-                for(LivingEntity entity : e.getAffectedEntities()){
-                    if (entity instanceof Player p){
-                        TagPlayer tagPlayer = playerManager.GetTagPlayer(p);
-                        PlayerType type = tagPlayer.getType();
-                        String playerName = tagPlayer.getPlayer().getName();
-                        if (type.equals(PlayerType.TAGGER)){
-                            message.append("&c");
-                            message.append(playerName);
-                        } else if (type.equals(PlayerType.RUNNER)) {
-                            message.append("&a");
-                            message.append(playerName);
-                        }
-                        ArrayList<LivingEntity> affected = new ArrayList<>(){{addAll(e.getAffectedEntities());}};
-                        int index = affected.indexOf(entity);
-                        if (index != affected.size() - 1){
-                            message.append("&f, ");
-                        }
+            if (affectedPlayers.size() < 4){
+                for(Player p : affectedPlayers){
+                    TagPlayer tagPlayer = playerManager.GetTagPlayer(p);
+                    PlayerType type = tagPlayer.getType();
+                    String playerName = tagPlayer.getPlayer().getName();
+                    if (type.equals(PlayerType.TAGGER)){
+                        message.append("&c");
+                        message.append(playerName);
+                    } else if (type.equals(PlayerType.RUNNER)) {
+                        message.append("&a");
+                        message.append(playerName);
                     }
+                    int index = affectedPlayers.indexOf(p);
+                    if (index != affectedPlayers.size() - 1){
+                        message.append("&f, ");
+                    }
+
                 }
             } else {
-                message.append(affectedEntities.size());
+                message.append(affectedPlayers.size());
                 message.append(" players");
             }
             // Give effects and play title
@@ -204,7 +210,6 @@ public class PowerupHandler implements Listener {
             message.append("&f!");
             playerManager.SendMessage(player, message.toString());
         }
-
     }
 
     public void DespawnPowerups(){

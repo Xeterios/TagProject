@@ -43,6 +43,42 @@ public class PlayerData implements ConfigurationSerializable {
         totalPoints += amount;
     }
 
+    public boolean removePoints(int amount){
+        if (totalPoints - amount >= 0){
+            totalPoints -= amount;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean setPoints(int amount){
+        if (amount >= 0){
+            totalPoints = amount;
+            return true;
+        }
+        return false;
+    }
+
+    public void addWins(int amount){
+        totalWins += amount;
+    }
+
+    public boolean removeWins(int amount){
+        if (totalWins - amount >= 0){
+            totalWins -= amount;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean setWins(int amount){
+        if (amount >= 0){
+            totalWins = amount;
+            return true;
+        }
+        return false;
+    }
+
     public void addWin(){
         totalWins++;
         winStreak++;
@@ -94,35 +130,51 @@ public class PlayerData implements ConfigurationSerializable {
 
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.translateAlternateColorCodes('&', "&eStats"));
-        lore.add(ChatColor.translateAlternateColorCodes('&', "&f" + playerData.getTotalWins() + " wins " + getPlaceColor(playerDataHandler, playerData, LeaderboardType.Wins) + "(#" + playerDataHandler.GetLeaderboardPosition(LeaderboardType.Wins, playerData) + ")"));
-        lore.add(ChatColor.translateAlternateColorCodes('&', "&f" + playerData.getTotalPoints() + " points " + getPlaceColor(playerDataHandler, playerData, LeaderboardType.Points) + "(#" + playerDataHandler.GetLeaderboardPosition(LeaderboardType.Points, playerData) + ")"));
-        lore.add(ChatColor.translateAlternateColorCodes('&', "&fWin streak: " + playerData.getWinStreak() + " " + getPlaceColor(playerDataHandler, playerData, LeaderboardType.Winstreak) + "(#" + playerDataHandler.GetLeaderboardPosition(LeaderboardType.Winstreak, playerData) + ")"));
+        lore.addAll(getLoreOrder(playerData, playerDataHandler, sortingType));
         playerHeadMeta.setLore(lore);
-
         SkullMeta skullMeta = (SkullMeta) playerHeadMeta;
         skullMeta.setOwningPlayer(target);
         playerHead.setItemMeta(skullMeta);
         return playerHead;
     }
 
-    public static String getPlaceColor(PlayerDataHandler playerDataHandler, PlayerData playerData, LeaderboardType type){
+    private static List<String> getLoreOrder(PlayerData playerData, PlayerDataHandler playerDataHandler, LeaderboardType sortingType){
+        List<String> lore = new ArrayList<>();
+        ArrayList<LeaderboardType> order = new ArrayList<>();
+        order.add(sortingType);
+        for (LeaderboardType type : LeaderboardType.values()) {
+            if (!type.equals(sortingType)) {
+                order.add(type);
+            }
+        }
+        for(LeaderboardType type : order){
+            switch (type){
+                case Points -> lore.add(ChatColor.translateAlternateColorCodes('&', "&f" + playerData.getTotalPoints() + " points " + getPlaceColor(playerDataHandler, playerData, LeaderboardType.Points) + "(#" + playerDataHandler.GetLeaderboardPosition(LeaderboardType.Points, playerData) + ")"));
+                case Wins -> lore.add(ChatColor.translateAlternateColorCodes('&', "&f" + playerData.getTotalWins() + " wins " + getPlaceColor(playerDataHandler, playerData, LeaderboardType.Wins) + "(#" + playerDataHandler.GetLeaderboardPosition(LeaderboardType.Wins, playerData) + ")"));
+                case Winstreak -> lore.add(ChatColor.translateAlternateColorCodes('&', "&fWin streak: " + playerData.getWinStreak() + " " + getPlaceColor(playerDataHandler, playerData, LeaderboardType.Winstreak) + "(#" + playerDataHandler.GetLeaderboardPosition(LeaderboardType.Winstreak, playerData) + ")"));
+            }
+        }
+        return lore;
+    }
+
+    private static String getPlaceColor(PlayerDataHandler playerDataHandler, PlayerData playerData, LeaderboardType type){
         int place = playerDataHandler.GetLeaderboardPosition(type, playerData);
         switch (place){
             case 1:
-                return "&6";
+                return TranslateColorToChatColor(Color.fromRGB(209, 176, 0));
             case 2:
-                return TranslateColorToChatColor(Color.SILVER);
+                return TranslateColorToChatColor(Color.fromRGB(192, 192, 192));
             case 3:
                 return TranslateColorToChatColor(Color.fromRGB(205, 127, 50));
             case 4:
                 return TranslateColorToChatColor(Color.fromRGB(32,178,170));
             default:
                 if (place <= 10){
-                    return TranslateColorToChatColor(Color.ORANGE);
+                    return TranslateColorToChatColor(Color.fromRGB(101, 252, 101));
                 } else if (place <= 50){
                     return TranslateColorToChatColor(Color.fromRGB(152, 251, 152));
                 } else if (place <= 100){
-                    return TranslateColorToChatColor(Color.fromRGB(152, 251, 152));
+                    return TranslateColorToChatColor(Color.fromRGB(219, 255, 219));
                 } else {
                     return "&f";
                 }
@@ -130,7 +182,7 @@ public class PlayerData implements ConfigurationSerializable {
     }
 
     private static String TranslateColorToChatColor(Color color){
-        String colorString = color.toString();
+        String colorString = String.format("x%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
         String hexCode = colorString.substring(colorString.indexOf('x'), colorString.indexOf('x') + 7).toLowerCase();
         hexCode = hexCode.replaceAll("\\B|\\b", "&");
         hexCode = hexCode.substring(0, hexCode.lastIndexOf("&"));

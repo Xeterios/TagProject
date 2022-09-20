@@ -2,6 +2,8 @@ package mu.xeterios.tag.tag.powerup.powerups;
 
 import mu.xeterios.tag.Main;
 import mu.xeterios.tag.tag.PowerupHandler;
+import mu.xeterios.tag.tag.players.PlayerType;
+import mu.xeterios.tag.tag.timer.EffectTimer;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -12,11 +14,10 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Team;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class InfraSight implements Powerup {
-
-
 
     @Override
     public ItemStack GetItem() {
@@ -47,10 +48,10 @@ public class InfraSight implements Powerup {
 
         if (runners.getEntries().contains(player.getName())){
             int duration = GetDuration(taggers);
-            GiveEffect(taggers, duration);
+            GiveEffect(PlayerType.TAGGER, duration);
         } else if (taggers.getEntries().contains(player.getName())) {
             int duration = GetDuration(runners);
-            GiveEffect(runners, duration);
+            GiveEffect(PlayerType.RUNNER, duration);
         }
         player.sendTitle(ChatColor.YELLOW + "INFRA SIGHT", ChatColor.GRAY + "activated!", 0, 20, 10);
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 10, 2);
@@ -67,13 +68,8 @@ public class InfraSight implements Powerup {
         return 100;
     }
 
-    private void GiveEffect(Team team, int duration){
+    private void GiveEffect(PlayerType team, int duration){
         PotionEffect effect = new PotionEffect(PotionEffectType.GLOWING, duration, 0, true, true, true);
-
-        for (String s : team.getEntries()){
-            Player p = Bukkit.getPlayer(s);
-            assert p != null;
-            p.addPotionEffect(effect);
-        }
+        Main.getPlugin(Main.class).getTag().getPlayerManager().GiveEffect(team, effect);
     }
 }

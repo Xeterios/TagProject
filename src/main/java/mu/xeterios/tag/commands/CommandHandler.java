@@ -83,6 +83,12 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 if (handler.CheckPermission("leaderboard") == PermissionType.ALLOWED){
                     toReturn.add("leaderboard");
                 }
+                if (handler.CheckPermission("points") == PermissionType.ALLOWED){
+                    toReturn.add("points");
+                }
+                if (handler.CheckPermission("wins") == PermissionType.ALLOWED){
+                    toReturn.add("wins");
+                }
                 if (handler.CheckPermission("start") == PermissionType.ALLOWED){
                     toReturn.add("start");
                 }
@@ -114,12 +120,23 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                         toReturn.add(player.getName());
                     }
                 }
+                if ((args[0].equals("points") && handler.CheckPermission("points") == PermissionType.ALLOWED) || (args[0].equals("wins") && handler.CheckPermission("wins") == PermissionType.ALLOWED)){
+                    toReturn.add("set");
+                    toReturn.add("add");
+                    toReturn.add("remove");
+                    toReturn.add("reset");
+                }
             }
             if (args.length == 3){
                 if (args[0].equals("start") && handler.CheckPermission("start") == PermissionType.ALLOWED){
                     for (Iterator<String> it = config.getMaps().keys().asIterator(); it.hasNext(); ) {
                         String info = it.next();
                         toReturn.add(config.getMaps().get(info).getName());
+                    }
+                }
+                if ((args[0].equals("points") && handler.CheckPermission("points") == PermissionType.ALLOWED) || (args[0].equals("wins") && handler.CheckPermission("wins") == PermissionType.ALLOWED)){
+                    for (Player player : Bukkit.getOnlinePlayers()){
+                        toReturn.add(player.getName());
                     }
                 }
             }
