@@ -94,12 +94,13 @@ public class PlayerDataHandler {
     public int GetLeaderboardPosition(LeaderboardType type, PlayerData data){
         ArrayList<PlayerData> leaderboard = GetLeaderboard(type);
         int place = leaderboard.indexOf(data);
-        if (place > 0){
+        if (place != 0){
             switch (type){
                 case Points -> {
                     for(PlayerData leaderboardData : leaderboard){
                         if (leaderboardData.getTotalPoints() == data.getTotalPoints()){
                             place = leaderboard.indexOf(leaderboardData);
+                            break;
                         }
                     }
                 }
@@ -107,6 +108,7 @@ public class PlayerDataHandler {
                     for(PlayerData leaderboardData : leaderboard){
                         if (leaderboardData.getTotalWins() == data.getTotalWins()){
                             place = leaderboard.indexOf(leaderboardData);
+                            break;
                         }
                     }
                 }
@@ -114,6 +116,7 @@ public class PlayerDataHandler {
                     for(PlayerData leaderboardData : leaderboard){
                         if (leaderboardData.getWinStreak() == data.getWinStreak()){
                             place = leaderboard.indexOf(leaderboardData);
+                            break;
                         }
                     }
                 }
